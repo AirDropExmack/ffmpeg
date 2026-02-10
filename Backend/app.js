@@ -33,7 +33,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 app.get("/", (req, res) => {
-  return res.json({ msg: "Welcomeeeeeeeee" });
+  return res.json({ msg: "Welcomeeeeeeekjgkdjgdkfjldee" });
 });
 
 /* ---------------- UPLOAD ---------------- */
@@ -78,9 +78,10 @@ app.post(
 );
 
 /* ---------------- POLLING ---------------- */
-app.get("/pooling/:jobId", (req, res) => {
-  const { jobId } = req.params;
-  const job = jobs[jobId];
+app.get("/pooling/:id", (req, res) => {
+  let poolingId  = req.params.id
+
+  let job = userData[poolingId]
 
   if (!job) {
     return res.status(404).json({ msg: "Invalid job id" });
