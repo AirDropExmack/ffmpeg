@@ -4,8 +4,7 @@ import express from "express";
 import fs from "fs";
 import cors from "cors";
 import multer from "multer";
-import crypto from "crypto";
-
+import { rateLimit } from "express-rate-limit";
 const app = express();
 const PORT = 9000;
 
@@ -15,96 +14,114 @@ app.use(cors({
   allowedHeaders:["Content-Type","Authorization"]
 }));
 
-app.use(express.json());
 
-/* ---------------- JOB STORE ---------------- */
-const jobs = {}; 
-// jobId: { status: "processing" | "done" | "error", output: string }
+app.use(express.json({ limit: "100mb" }));
 
-/* ---------------- MULTER ---------------- */
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "./"),
-  filename: (req, file, cb) => {
-    const jobId = req.jobId;
-    cb(null, `input-${jobId}.mp4`);
+// This is the user's MiddleWare
+
+const userMiddleware = (req,res,next)=>{
+  req.userid = Date.now().toString()
+  next()
+}
+
+const limiter = rateLimit({
+  windowMs: 40 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  ipv6Subnet: 56,
+  handler: (req, res) => {
+    res.status(429).json({ msg: "Too many req , Try after 40 minutes" });
   },
 });
 
-const upload = multer({ storage });
+app.use(limiter);
+
+let storage = multer.diskStorage({
+  destination: (req, file, callback) => {
+    callback(null, "./");
+  },
+  filename: (req, file, callback) => {
+    callback(null, `input-${req.userid}.mp4`);
+  },
+});
+
+
+var upload = multer({ storage: storage });
+
+let userData = {}
 
 app.get("/", (req, res) => {
-  return res.json({ msg: "We" });
+  return res.json({ msg: "ceckig" });
 });
 
-/* ---------------- UPLOAD ---------------- */
-app.post(
-  "/getvideo/sendVideo",
-  (req, res, next) => {
-    req.jobId = crypto.randomUUID();
-    next();
-  },
-  upload.single("file"),
-  async (req, res) => {
-    const jobId = req.jobId;
-    const inputPath = `input-${jobId}.mp4`;
-    const outputPath = `output-${jobId}.mp4`;
+app.post("/getvideo/sendVideo", userMiddleware , upload.single("file"), async (req, res) => {
+  try {
+    console.log("Life changing")
+    let getUserId = req.userid
+    
+    let userOutputFileName = `output-${getUserId}.mp4`
 
-    jobs[jobId] = { status: "processing" };
+    const filee = req.file.path;
+
+     userData[getUserId] = {status:"Processing"}
 
     const command = `
-      ffmpeg -i ${inputPath} \
-      -vf "drawtext=fontfile=font.ttf:fontsize=80:fontcolor=red@0.5:text=userid1345:
-      x=if(eq(mod(t\\,2)\\,0)\\,rand(0\\,(W-tw))\\,x):
-      y=if(eq(mod(t\\,3)\\,0)\\,rand(0\\,(H-th))\\,y)" \
-      -c:v libx264 -crf 23 -c:a copy ${outputPath}
-    `;
+    ffmpeg -y -i "${filee}" \
+-vf \
+"drawtext=fontfile=font.ttf:fontsize=80:fontcolor=red@0.5:text=userid1345: \
+ x=if(eq(mod(t\\,2)\\,0)\\,rand(0\\,(W-tw))\\,x): \
+ y=if(eq(mod(t\\,3)\\,0)\\,rand(0\\,(H-th))\\,y)" \
+-c:v libx264 -crf 1 -c:a copy ${userOutputFileName}
+`;
+
+
 
     exec(command, (error) => {
       if (error) {
-        jobs[jobId].status = "error";
-        return;
+        userData[getUserId] = {status:"error"}
+        return
       }
-      jobs[jobId] = {
-        status: "done",
-        output: outputPath,
-      };
+      
+      userData[getUserId].status = "done";
+      userData[getUserId].output = userOutputFileName;
+      
     });
 
-   res.json({
-  msg: "Video uploaded, processing started",
-  userid: jobId,
+    res.json({msg:"Video Recived Now wait for some Moments",userid:getUserId})
+
+  } 
+  catch (error) {
+    console.log("There is some error while loading the file in the catch part");
+  }
 });
 
-  }
-);
-
-/* ---------------- POLLING ---------------- */
-app.get("/pooling/:id", (req, res) => {
+app.get("/pooling/:id", async (req, res) => {
+  console.log("Inside of pooling");
   let poolingId  = req.params.id
 
-  let job = jobs[poolingId]
+  let job = userData[poolingId]
 
-  if (!job) {
-    return res.status(404).json({ msg: "Invalid job id" });
+  if (!job) return res.status(404).json({ msg: "Invalid job id" });
+
+
+  if(job.status === "error"){
+    res.status(404).json({msg:"Got an error while converting the file"})
   }
-
-  if (job.status === "processing") {
-    return res.status(202).json({ status: "processing" });
+  else if(job.status === "Processing"){
+    res.status(202).json({msg:"Video is processing"})
   }
+  else {
+    res.sendFile(path.resolve(job.output));
 
-  if (job.status === "error") {
-    return res.status(500).json({ status: "error" });
-  }
-
-  res.sendFile(path.resolve(job.output), () => {
     setTimeout(() => {
-      fs.unlink(`input-${poolingId}.mp4`, () => {});
-      fs.unlink(`output-${poolingId}.mp4`, () => {});
-      delete jobs[poolingId];
-    }, 5000);
-  });
+      fs.unlink(`./input-${poolingId}.mp4`, () => {});
+      fs.unlink(`./output-${poolingId}.mp4`, () => {});
+      delete userData[poolingId]
+    }, 3000);
+  }
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+  console.log(`Server is running on the PORT number ${PORT}`);
 });
