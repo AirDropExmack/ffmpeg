@@ -86,14 +86,15 @@ console.log("aur aandar")
     }
     console.log("Dynamic watermark added");
     console.log("aur aur aandar")
-    const fileContent = 'Hello, world! This content will overwrite any existing file.';
-    fs.writeFile('output.txt',fileContent,(err)=>{
-      if(err){
-        console.error('Error writing file:', err);
-        return;
-      }
-      console.log('File "output.txt" has been written successfully.');
-    })
+
+	  res.sendFile(path.resolve("./addingwatermarkoutput.mp4"));
+
+    setTimeout(()=>{
+       fs.unlink("./input.mp4", () => {});
+       fs.unlink("./addingwatermarkoutput.mp4", () => {});
+       fs.unlink("./output.txt", () => {});
+    },3000)
+    
   });
 
 }
@@ -107,25 +108,19 @@ catch(error){
 
 
 
-app.get("/pooling",async(req,res)=>{
-  const filePath = path.resolve("./output.txt");
+// app.get("/pooling",async(req,res)=>{
+//   const filePath = path.resolve("./output.txt");
 
-  if (!fs.existsSync(filePath)) {
-    console.log("File does not exist!");
-    return res.status(202).json({
-    msg: "Video is still processing, please wait"
-  });
-  }
-  else{
-     res.sendFile(path.resolve("./addingwatermarkoutput.mp4"));
-
-    setTimeout(()=>{
-       fs.unlink("./input.mp4", () => {});
-       fs.unlink("./addingwatermarkoutput.mp4", () => {});
-       fs.unlink("./output.txt", () => {});
-    },3000)
-  }
-})
+//   if (!fs.existsSync(filePath)) {
+//     console.log("File does not exist!");
+//     return res.status(202).json({
+//     msg: "Video is still processing, please wait"
+//   });
+//   }
+//   else{
+     
+//   }
+// })
 
 
 app.listen(PORT, () => {
