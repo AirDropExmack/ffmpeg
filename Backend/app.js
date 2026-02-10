@@ -10,8 +10,9 @@ const app = express();
 const PORT = 9000;
 
 app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST"],
+  origin:"https://savebiss.vercel.app",
+  methods:["GET","POST"],
+  allowedHeaders:['Content-Type,Authorization']
 }));
 
 app.use(express.json());
@@ -32,7 +33,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 app.get("/", (req, res) => {
-  return res.json({ msg: "Welcome" });
+  return res.json({ msg: "Welcomeeeeeeeee" });
 });
 
 /* ---------------- UPLOAD ---------------- */
