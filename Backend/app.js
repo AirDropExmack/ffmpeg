@@ -12,7 +12,7 @@ const PORT = 9000;
 app.use(cors({
   origin:"https://savebiss.vercel.app",
   methods:["GET","POST"],
-  allowedHeaders:['Content-Type,Authorization']
+  allowedHeaders:["Content-Type","Authorization"]
 }));
 
 app.use(express.json());
@@ -33,7 +33,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 app.get("/", (req, res) => {
-  return res.json({ msg: "Welcomegdkfjldee" });
+  return res.json({ msg: "We" });
 });
 
 /* ---------------- UPLOAD ---------------- */
@@ -70,10 +70,11 @@ app.post(
       };
     });
 
-    res.json({
-      msg: "Video uploaded, processing started",
-      jobId,
-    });
+   res.json({
+  msg: "Video uploaded, processing started",
+  userid: jobId,
+});
+
   }
 );
 
@@ -81,7 +82,7 @@ app.post(
 app.get("/pooling/:id", (req, res) => {
   let poolingId  = req.params.id
 
-  let job = userData[poolingId]
+  let job = jobs[poolingId]
 
   if (!job) {
     return res.status(404).json({ msg: "Invalid job id" });
@@ -99,7 +100,7 @@ app.get("/pooling/:id", (req, res) => {
     setTimeout(() => {
       fs.unlink(`input-${poolingId}.mp4`, () => {});
       fs.unlink(`output-${poolingId}.mp4`, () => {});
-      delete jobs[jobId];
+      delete jobs[poolingId];
     }, 5000);
   });
 });
