@@ -33,7 +33,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 app.get("/", (req, res) => {
-  return res.json({ msg: "Welcomeeeeeeekjgkdjgdkfjldee" });
+  return res.json({ msg: "Welcomegdkfjldee" });
 });
 
 /* ---------------- UPLOAD ---------------- */
@@ -97,8 +97,8 @@ app.get("/pooling/:id", (req, res) => {
 
   res.sendFile(path.resolve(job.output), () => {
     setTimeout(() => {
-      fs.unlink(`input-${jobId}.mp4`, () => {});
-      fs.unlink(`output-${jobId}.mp4`, () => {});
+      fs.unlink(`input-${poolingId}.mp4`, () => {});
+      fs.unlink(`output-${poolingId}.mp4`, () => {});
       delete jobs[jobId];
     }, 5000);
   });
