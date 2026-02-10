@@ -8,7 +8,11 @@ import { rateLimit } from "express-rate-limit";
 const app = express();
 const PORT = 9000;
 
-app.use(cors());
+app.use(cors({
+  origin:"https://savebiss.vercel.app",
+  methods:["GET","POST"],
+  allowedHeaders:['Content-Type,Authorization']
+}));
 
 
 app.use(express.json({ limit: "100mb" }));
@@ -48,7 +52,7 @@ var upload = multer({ storage: storage });
 let userData = {}
 
 app.get("/", (req, res) => {
-  return res.json({ msg: "Welcome to the v4 of Savebiss" });
+  return res.json({ msg: "Welcome to the v4 of Savebiss on railways heehe" });
 });
 
 app.post("/getvideo/sendVideo", userMiddleware , upload.single("file"), async (req, res) => {
