@@ -52,7 +52,7 @@ var upload = multer({ storage: storage });
 let userData = {}
 
 app.get("/", (req, res) => {
-  return res.json({ msg: "ceckig" });
+  return res.json({ msg: "hekejjeee" });
 });
 
 app.post("/getvideo/sendVideo", userMiddleware , upload.single("file"), async (req, res) => {
@@ -79,8 +79,8 @@ app.post("/getvideo/sendVideo", userMiddleware , upload.single("file"), async (r
 
     exec(command, (error) => {
       if (error) {
-        userData[getUserId] = {status:"error"}
-        return
+          userData[getUserId].status = "error";
+          return;
       }
       
       userData[getUserId].status = "done";
